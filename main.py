@@ -1,7 +1,7 @@
 import itertools
 
 
-def key_list_bip9_match(key_word, bip39_word):
+def key_list_bip39_match(key_word, bip39_word):
     if len(key_word) != len(bip39_word):
         return False
     for idx,letter in enumerate(key_word):
@@ -24,7 +24,7 @@ key_list = [w.replace('\n', '') for w in key_list]
 possible_words = [[] for i in range(12)]
 for i in range(12):
     for word in bip39:
-        if key_list_bip9_match(key_list[i], word):
+        if key_list_bip39_match(key_list[i], word):
             possible_words[i].append(word)
 
 res = [' '.join(str(y) for y in x) for x in itertools.product(*possible_words)]
