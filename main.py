@@ -1,4 +1,5 @@
 import itertools
+from timeit import default_timer as timer
 
 from crypto.configuration.network import set_network
 from crypto.identity.address import address_from_passphrase
@@ -39,20 +40,30 @@ def generate_passphrases():
             raise ValueError('Could not match any words to clue "{}". Please make sure the clue was entered correctly.'.format(key_list[i]))
 
     res = [' '.join(str(y) for y in x) for x in itertools.product(*possible_words)]
+
+    print('Possibilities for each clue:')
+    for line in possible_words:
+        print(line)
     return res
 
 
 def find_correct_passphrase(desired_address, phassphrases):
+    start = timer()
     set_network(Mainnet)
     for passphrase in phassphrases:
         corresponding_address = address_from_passphrase(passphrase)
         if corresponding_address == desired_address:
+            end = timer()
+            print('total time: {} s'.format(round((end - start), 2)))
             return passphrase
     return None
 
 
 def main():
     passphrases = generate_passphrases()
+    print('\nNumber of passphrases to test: {}'.format(len(passphrases)))
+    print('Estimated completion time: {} seconds'.format(round(len(passphrases)/30000), 2))
+    print('Exit and update clues.txt to narrow search, or continue and input target address\n')
     while True:
         try:
             address = input('Enter the desired address.')
