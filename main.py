@@ -1,4 +1,3 @@
-import itertools
 from timeit import default_timer as timer
 
 from crypto.configuration.network import set_network
@@ -70,6 +69,7 @@ def generate_passphrases(desired_address):
 
     return 'No match found.'
 
+
 def main():
     while True:
         try:
@@ -79,9 +79,14 @@ def main():
             print('Invalid address. Please double check the target address and try again.')
         else:
             break
+    start_time = timer()
     passphrase = generate_passphrases(desired_address)
     print('The passphrase is: {}'.format(passphrase))
+    end_time = timer()
+    print('Total time elapsed: {} s'.format(round(end_time - start_time, 2)))
+
 
 #ATUt3sr3FkE2Q6cmDRH7s2sv9Nv9ySHLUK
+
 
 main()
