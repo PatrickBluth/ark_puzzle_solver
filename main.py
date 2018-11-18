@@ -43,7 +43,7 @@ def generate_passphrases(address):
         possible_words[11].append(word)
 
     # res = [' '.join(str(y) for y in x) for x in itertools.product(*possible_words)]
-
+    set_network(Mainnet)
     for word1 in possible_words[0]:
         for word2 in possible_words[1]:
             for word3 in possible_words[2]:
@@ -62,6 +62,7 @@ def generate_passphrases(address):
                                                     if corresponding_address == address:
                                                         return passphrase
 
+    return None
     # print('Possibilities for each clue:')
     # for line in possible_words:
     #     print(line)
