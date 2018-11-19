@@ -1,5 +1,6 @@
 from timeit import default_timer as timer
 
+import itertools
 from crypto.configuration.network import set_network
 from crypto.identity.address import address_from_passphrase
 from crypto.identity.address import validate_address
@@ -49,23 +50,16 @@ def generate_passphrases(desired_address):
 
     set_network(Mainnet)
     calculations_counter = 0
-    for word1 in possible_words[0]:
-        for word2 in possible_words[1]:
-                for word3 in possible_words[2]:
-                        for word4 in possible_words[3]:
-                                for word5 in possible_words[4]:
-                                        for word6 in possible_words[5]:
-                                                for word7 in possible_words[6]:
-                                                        for word8 in possible_words[7]:
-                                                                for word9 in possible_words[8]:
-                                                                        for word10 in possible_words[9]:
-                                                                                for word11 in possible_words[10]:
-                                                                                        for word12 in possible_words[11]:
-                                                                                            passphrase = ' '.join([word1, word2, word3, word4, word5, word6, word7, word8, word9, word10, word11, word12])
-                                                                                            calculations_counter += 1
-                                                                                            print(calculations_counter)
-                                                                                            if address_from_passphrase(passphrase) == desired_address:
-                                                                                                return passphrase
+    milestone = 0
+
+    for words in itertools.product(*possible_words):
+        passphrase = " ".join(words)
+        calculations_counter += 1
+        if calculations_counter - milestone >= 200000:
+            print(calculations_counter)
+            milestone = calculations_counter
+        if address_from_passphrase(passphrase) == desired_address:
+            return passphrase
 
     return 'No match found.'
 
@@ -86,7 +80,8 @@ def main():
     print('Total time elapsed: {} s'.format(round(end_time - start_time, 2)))
 
 
-#ATUt3sr3FkE2Q6cmDRH7s2sv9Nv9ySHLUK
+#AGwDeCFEec9dWNvkwuyzvB1CagbhYDa1ja
+
 
 
 main()
