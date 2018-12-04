@@ -56,7 +56,7 @@ def generate_passphrases(desired_address):
         passphrase = " ".join(words)
         calculations_counter += 1
         if calculations_counter - milestone >= 200000:
-            print(calculations_counter)
+            print("{} calculations complete".format(calculations_counter))
             milestone = calculations_counter
         if address_from_passphrase(passphrase) == desired_address:
             return passphrase
@@ -80,7 +80,7 @@ def main():
     print('Total time elapsed: {} s'.format(round(end_time - start_time, 2)))
 
 
-#AGwDeCFEec9dWNvkwuyzvB1CagbhYDa1ja
+#AWRdo3zQ9gPeiUEAbogMNGrEBoixPzdowy
 
 
 

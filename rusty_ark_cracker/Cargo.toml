@@ -1,6 +1,0 @@
-[package]
-name = "rusty_ark_cracker"
-version = "0.1.0"
-authors = ["PatrickBluth <patrick.bluth@gmail.com>"]
-
-[dependencies]
