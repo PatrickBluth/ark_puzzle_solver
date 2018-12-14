@@ -1,6 +1,8 @@
 from timeit import default_timer as timer
 
 import itertools
+import multiprocessing as mp
+
 from crypto.configuration.network import set_network
 from crypto.identity.address import address_from_passphrase
 from crypto.identity.address import validate_address
@@ -17,7 +19,7 @@ def key_list_bip39_match(key_word, bip39_word):
     return True
 
 
-def generate_passphrases(desired_address):
+def generate_possible_words():
     f = open('bip39_words.txt')
     bip39 = f.readlines()
     f.close()
@@ -41,13 +43,19 @@ def generate_passphrases(desired_address):
             if key_list_bip39_match(key_list[i], word):
                 possible_words[i].append(word)
         if len(possible_words[i]) == 0:
-            raise ValueError('Could not match any words to clue: {}. Please make sure the clue was entered correctly.'.format(key_list[i]))
+            raise ValueError(
+                'Could not match any words to clue: {}. Please make sure the clue was entered correctly.'.format(
+                    key_list[i]))
 
     total_calculations = 1
     for word_list in possible_words:
         total_calculations *= len(word_list)
     print('Total number of passphrases to try: {}'.format(total_calculations))
 
+    return possible_words
+
+
+def generate_passphrases(possible_words, desired_address='AWRdo3zQ9gPeiUEAbogMNGrEBoixPzdowy'):
     set_network(Mainnet)
     calculations_counter = 0
     milestone = 0
@@ -60,11 +68,10 @@ def generate_passphrases(desired_address):
             milestone = calculations_counter
         if address_from_passphrase(passphrase) == desired_address:
             return passphrase
+    return 'none'
 
-    return 'No match found.'
 
-
-def main():
+if __name__ == "__main__":
     while True:
         try:
             desired_address = input('Enter the desired address.')
@@ -74,14 +81,37 @@ def main():
         else:
             break
     start_time = timer()
-    passphrase = generate_passphrases(desired_address)
-    print('The passphrase is: {}'.format(passphrase))
+    possible_words = generate_possible_words()
+
+    num_parts = 9
+
+    results = []
+    possible_words_bits = []
+    possible_words_longest_section = possible_words[0]
+
+
+    for i in range(1, len(possible_words)):
+        if len(possible_words[i]) > len(possible_words[i-1]):
+            possible_words_longest_section = possible_words[i]
+
+    part_size = len(possible_words_longest_section) // num_parts
+
+    for i in range(num_parts):
+        bit = possible_words.copy()
+        if i == num_parts - 1:
+            bit[-1] = possible_words_longest_section[part_size * i:]
+        else:
+            bit[-1] = possible_words_longest_section[part_size * i: part_size * (i + 1)]
+        possible_words_bits.append(bit)
+
+    for comb in possible_words_bits:
+        print(comb)
+
+    pool = mp.Pool(processes=num_parts)
+    print(pool.map(generate_passphrases, possible_words_bits))
+
     end_time = timer()
     print('Total time elapsed: {} s'.format(round(end_time - start_time, 2)))
 
+# AWRdo3zQ9gPeiUEAbogMNGrEBoixPzdowy
 
-#AWRdo3zQ9gPeiUEAbogMNGrEBoixPzdowy
-
-
-
-main()
