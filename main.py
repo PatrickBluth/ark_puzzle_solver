@@ -1,3 +1,4 @@
+from functools import partial
 from timeit import default_timer as timer
 
 import itertools
@@ -55,7 +56,7 @@ def generate_possible_words():
     return possible_words
 
 
-def generate_passphrases(possible_words, desired_address='AWRdo3zQ9gPeiUEAbogMNGrEBoixPzdowy'):
+def generate_passphrases(possible_words, desired_address):
     set_network(Mainnet)
     calculations_counter = 0
     milestone = 0
@@ -80,21 +81,18 @@ if __name__ == "__main__":
             print('Invalid address. Please double check the target address and try again.')
         else:
             break
+
     start_time = timer()
+
     possible_words = generate_possible_words()
-
-    num_parts = 9
-
-    results = []
-    possible_words_bits = []
     possible_words_longest_section = possible_words[0]
-
-
     for i in range(1, len(possible_words)):
         if len(possible_words[i]) > len(possible_words[i-1]):
             possible_words_longest_section = possible_words[i]
 
+    num_parts = 3
     part_size = len(possible_words_longest_section) // num_parts
+    possible_words_bits = []
 
     for i in range(num_parts):
         bit = possible_words.copy()
@@ -104,11 +102,14 @@ if __name__ == "__main__":
             bit[-1] = possible_words_longest_section[part_size * i: part_size * (i + 1)]
         possible_words_bits.append(bit)
 
-    for comb in possible_words_bits:
-        print(comb)
-
     pool = mp.Pool(processes=num_parts)
-    print(pool.map(generate_passphrases, possible_words_bits))
+    generate_passphrases_with_address = partial(generate_passphrases, desired_address=desired_address)
+    result = [item for item in pool.map(generate_passphrases_with_address, possible_words_bits) if item != 'none']
+
+    if not result:
+        print('No result found.')
+    else:
+        print(result)
 
     end_time = timer()
     print('Total time elapsed: {} s'.format(round(end_time - start_time, 2)))
