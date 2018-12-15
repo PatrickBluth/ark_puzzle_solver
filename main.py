@@ -56,20 +56,27 @@ def generate_possible_words():
     return possible_words
 
 
-def generate_passphrases(possible_words, desired_address):
+def generate_passphrases(p_count, possible_words, desired_address, quit, found):
     set_network(Mainnet)
     calculations_counter = 0
     milestone = 0
+    print('Processes {} started.'.format(p_count))
 
-    for words in itertools.product(*possible_words):
-        passphrase = " ".join(words)
-        calculations_counter += 1
-        if calculations_counter - milestone >= 200000:
-            print("{} calculations complete".format(calculations_counter))
-            milestone = calculations_counter
-        if address_from_passphrase(passphrase) == desired_address:
-            return passphrase
-    return 'none'
+    if not quit.is_set():
+        for words in itertools.product(*possible_words):
+            if quit.is_set():
+                break
+            passphrase = " ".join(words)
+            if p_count == 0:
+                calculations_counter += 1
+                if calculations_counter - milestone >= 200000:
+                    print("{} calculations complete on each process".format(calculations_counter))
+                    milestone = calculations_counter
+            if address_from_passphrase(passphrase) == desired_address:
+                print('Passphrase found: {}'.format(passphrase))
+                found.set()
+                break
+        print('Processes {} closed.'.format(p_count))
 
 
 if __name__ == "__main__":
@@ -87,10 +94,10 @@ if __name__ == "__main__":
     possible_words = generate_possible_words()
     possible_words_longest_section = possible_words[0]
     for i in range(1, len(possible_words)):
-        if len(possible_words[i]) > len(possible_words[i-1]):
+        if len(possible_words[i]) > len(possible_words[i - 1]):
             possible_words_longest_section = possible_words[i]
 
-    num_parts = 3
+    num_parts = 4
     part_size = len(possible_words_longest_section) // num_parts
     possible_words_bits = []
 
@@ -102,17 +109,16 @@ if __name__ == "__main__":
             bit[-1] = possible_words_longest_section[part_size * i: part_size * (i + 1)]
         possible_words_bits.append(bit)
 
+    quit = mp.Event()
+    found = mp.Event()
     pool = mp.Pool(processes=num_parts)
-    generate_passphrases_with_address = partial(generate_passphrases, desired_address=desired_address)
-    result = [item for item in pool.map(generate_passphrases_with_address, possible_words_bits) if item != 'none']
-
-    if not result:
-        print('No result found.')
-    else:
-        print(result)
+    for p_count, elm in enumerate(possible_words_bits):
+        p = mp.Process(target=generate_passphrases, args=(p_count, elm, desired_address, quit, found))
+        p.start()
+    found.wait()
+    quit.set()
 
     end_time = timer()
     print('Total time elapsed: {} s'.format(round(end_time - start_time, 2)))
 
 # AWRdo3zQ9gPeiUEAbogMNGrEBoixPzdowy
-
